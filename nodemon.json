@@ -1,5 +1,8 @@
 {
     "env" : {
-        "MONGOOSE_PASSWORD" : "Hola.2015"
+        "MONGOOSE_PASSWORD" : "Hola.2015",
+        "HASH_LEFT" : "",
+        "HASH_RIGHT": "", 
+        "JWT_KEY": "text"
     }
 }

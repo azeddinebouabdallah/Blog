@@ -8,6 +8,7 @@ const userRoutes = require('./api/routes/user');
 const articleRoutes = require('./api/routes/article');
 const commentRoutes = require('./api/routes/comment');
 const newsletterRoutes = require('./api/routes/newsletter');
+const signin = require('./api/routes/signin');
 
 //Set connection to Mongodb 
 mongoose.connect('mongodb://localhost/blog');
@@ -32,6 +33,7 @@ app.use('/user', userRoutes);
 app.use('/article', articleRoutes);
 app.use('/manageComment', commentRoutes);
 app.use('/subs', newsletterRoutes);
+app.use('/signin', signin);
 
 // Handle errors or other routes 
 app.use((req, res, next)=> {

@@ -1,11 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const multer = require('multer');
-
+const bcrypt =require('bcrypt');
+const fs = require('fs');
 
 // Import models
 const User = require('../model/user');
+
+// Error handling 
+let errorHandle = (res) => {
+    return res.status(400).json({
+        error: 'Something went wrong'
+    })
+}
 
 //Multer Confguration 
 let storage = multer.diskStorage({
@@ -75,6 +82,15 @@ router.get('/:userId', (req, res, next) => {
 // Add user
 router.post('/', upload.single('userImage'), (req, res, next) => {
 
+                    let firstName       = req.body.firstName;
+                    let lastName        = req.body.lastName;
+                    let email           = req.body.email;
+                    let type            = req.body.type;
+                    let description     = req.body.description;
+                    let facebookAccount = req.body.fbUrl;
+                    let twitterAccount  = req.body.tUrl;
+                    let instaAccount    = req.body.iUrl;
+
     User.find({
         email: req.body.email 
     })
@@ -84,26 +100,42 @@ router.post('/', upload.single('userImage'), (req, res, next) => {
                 error: 'User already exists'
             });
         }else {
-                // Insert new User
-                let user = new User({
 
-                    firstName: req.body.firstName,
-                    lastName: req.body.lastName,
-                    email: req.body.email,
-                    type: req.body.type,
-                    image: req.file.path,
-                    description: req.body.description, 
-                    facebookAccount: req.body.fbUrl, 
-                    twitterAccount: req.body.tUrl,
-                    instaAccount: req.body.iUrl,
+            let img;
+            if (req.file){
+                img = req.file.path;
+            }else {
+                img = undefined;
+            }
+
+                let passwordHashed;
+
+                bcrypt.hash(req.body.password, 10, (err , hash) => {
+
+                    if (err) {
+                        return errorHandle(res);
+                    }else {
+                        passwordHashed = hash;
+                          // Insert new User
+                    
+                  let user = new User({
+
+                    firstName:          firstName,
+                    lastName:           lastName,       
+                    email:              email,          
+                    type:               type,           
+                    description:        description, 
+                    facebookAccount:    facebookAccount, 
+                    twitterAccount:     twitterAccount, 
+                    instaAccount:       instaAccount,   
+                    password:           passwordHashed,
+                    image:              img,
 
                 });
 
             user.save((err, data) => {
                 if (err) {
-                    return res.status(500).json({
-                        error: 'Something went wrong'
-                    });
+                    return errorHandle(res);
                 }else {
 
                     res.status(200).json({
@@ -112,6 +144,8 @@ router.post('/', upload.single('userImage'), (req, res, next) => {
 
                 }
             });
+                    }
+                });
 
         }
     });
@@ -133,7 +167,7 @@ router.patch('/:userId', upload.single('userImage'), (req, res, next) => {
                 User.update(
                 {
                     _id: req.params.userId
-                },{
+                },{ $set:{ 
                     firstName: req.body.firstName,
                     lastName: req.body.lastName,
                     email: req.body.email,
@@ -143,6 +177,7 @@ router.patch('/:userId', upload.single('userImage'), (req, res, next) => {
                     facebookAccount: req.body.fbUrl, 
                     twitterAccount: req.body.tUrl,
                     instaAccount: req.body.iUrl,
+                    }
                 })
             .exec((err, data) => {
                     if (err) {
@@ -161,17 +196,56 @@ router.patch('/:userId', upload.single('userImage'), (req, res, next) => {
     
 });
 
+
+// Change password
+router.patch('/changePassword/:userId', (req, res, next) => {
+
+    let passwordHashed;
+    bcrypt.hash(process.env.HASH_LEFT + req.body.password + process.env.HASH_RIGHT, 10, (err, hash) => {
+        if (err) {
+            throw new Error(err);
+        }else {
+
+            passwordHashed = hash;
+
+            User.findByIdAndUpdate(req.params.userId, {
+                $set : {
+                    password : passwordHashed
+                }
+            },(err, data) => {
+                    if (err) {
+                        return errorHandle(res);
+                    }else {
+                        if (data) {
+                            res.status(200).json({
+                                message : 'Password has been changes successfuly'
+                            });
+                        }else {
+                            res.status(500).json({
+                                message : 'No such user'
+                            });
+                        }
+                    }
+            });
+        }
+    });
+
+});
+
 // Delete a user by ID
 router.delete('/:userId', (req, res, next) => {
-    User.find({
-        _id : req.params.userId
-    }).exec((err, data) => {
+
+    User.findById(req.params.userId)
+    .exec((err, data) => {
         if (err) {
             res.status(400).json({
                 error: 'Something went wrong'
             });
         }else {
-            if (data.length > 0){
+            if (data){
+                if (data.image){
+                fs.unlinkSync(data.image);
+                }
                 User.remove({_id : req.params.userId})
                 .exec((err, data) => {
                     if (err) {
