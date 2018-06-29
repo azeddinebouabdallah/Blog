@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
 const User = require('../model/user');
+
 
 let errorHandling = (res) => {
 
@@ -35,12 +37,26 @@ router.post('/', (req, res, next) => {
                             return signInFailed(res);
                         }else {
                             if (result) {
+                                
+                                // Get JWT KEY
+                                let obj = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
+
+                                let type;
+                                
+                                if (data[0].type == 1){
+                                    type = '1_a';
+                                }else {
+                                    type = '1_b'
+                                }
+                                console.log(type);
+ 
                                 let token = jwt.sign({
                                 email: data[0].email,
                                 firstname : data[0].firstName,
-                                lastname : data[0].lastName
+                                lastname : data[0].lastName,
+                                type: type
                             }, 
-                            'test'
+                            obj.JWT_KEY
                             );
                             res.status(200).json({
                                 message: 'Sign In went successful',

@@ -7,6 +7,9 @@ const fs = require('fs');
 // Import models
 const User = require('../model/user');
 
+// Import authentification check filter
+const checkAuth = require('../middleware/check-auth');
+
 // Error handling 
 let errorHandle = (res) => {
     return res.status(400).json({
@@ -80,7 +83,7 @@ router.get('/:userId', (req, res, next) => {
 });
 
 // Add user
-router.post('/', upload.single('userImage'), (req, res, next) => {
+router.post('/', checkAuth.checkAuthAdmin, upload.single('userImage'), (req, res, next) => {
 
                     let firstName       = req.body.firstName;
                     let lastName        = req.body.lastName;
@@ -153,7 +156,7 @@ router.post('/', upload.single('userImage'), (req, res, next) => {
 });
 
 // Update User by ID
-router.patch('/:userId', upload.single('userImage'), (req, res, next) => {
+router.patch('/:userId', checkAuth.checkAuthNormal, upload.single('userImage'), (req, res, next) => {
 
     User.find({
         _id : req.params.userId
@@ -198,7 +201,7 @@ router.patch('/:userId', upload.single('userImage'), (req, res, next) => {
 
 
 // Change password
-router.patch('/changePassword/:userId', (req, res, next) => {
+router.patch('/changePassword/:userId', checkAuth.checkAuthNormal ,(req, res, next) => {
 
     let passwordHashed;
     bcrypt.hash(process.env.HASH_LEFT + req.body.password + process.env.HASH_RIGHT, 10, (err, hash) => {
