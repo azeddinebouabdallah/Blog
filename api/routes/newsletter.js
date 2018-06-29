@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
+
+const checkAuth = require('../middleware/check-auth');
 
 // Import model
 const Newsletter = require('../model/newsletter');
 
-router.get('/', (req, res, next) => {
+router.get('/', checkAuth.checkAuthNormal, (req, res, next) => {
 
     Newsletter.find().exec((err, docs) => {
         if (err) {
@@ -45,7 +46,7 @@ router.post('/', (req, res, next) => {
 
 });
 
-router.delete('/:subId', (req, res, next) => {
+router.delete('/:subId', checkAuth.checkAuthAdmin,(req, res, next) => {
     let id = req.params.subId; 
 
     Newsletter.remove({

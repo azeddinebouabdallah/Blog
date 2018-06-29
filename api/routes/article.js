@@ -3,6 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 
+const checkAuth =  require('../middleware/check-auth');
+
 // Error handling 
 let errorHandle = (res) => {
     return res.status(400).json({
@@ -109,6 +111,8 @@ router.get('/auther/:autherId', (req, res, next) => {
 
 // Add article
 router.post('/', 
+    checkAuth.checkAuthNormal
+    ,
     upload.fields([
         {name : 'thumbnail' , maxCount: 1},
         {name : 'photos', maxCount: 5}
@@ -151,6 +155,7 @@ router.post('/',
 
 // Update article by ID
 router.patch('/:articleId', 
+    checkAuth.checkAuthNormal,
     upload.fields(
     [
     { name: 'thumbnail', maxCount : 1}, 
@@ -191,7 +196,9 @@ router.patch('/:articleId',
 });
 
 // Delete article by ID
-router.delete('/:articleId', (req, res, next) => {
+router.delete('/:articleId', 
+    checkAuth.checkAuthNormal,
+    (req, res, next) => {
     Article.findById(req.params.articleId, (err, data) => {
         if (err) {
             return errorHandle(res);

@@ -236,7 +236,7 @@ router.patch('/changePassword/:userId', checkAuth.checkAuthNormal ,(req, res, ne
 });
 
 // Delete a user by ID
-router.delete('/:userId', (req, res, next) => {
+router.delete('/:userId', checkAuth.checkAuthAdmin,(req, res, next) => {
 
     User.findById(req.params.userId)
     .exec((err, data) => {

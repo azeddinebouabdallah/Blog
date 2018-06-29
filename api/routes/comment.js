@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Comment = require('../model/comment');
 
+const checkAuth = require('../middleware/check-auth');
 
 
 // Get all comment of a given Article ID
@@ -66,7 +67,7 @@ router.get('/', (req, res, next) => {
 });
 
 // Delete Comment by ID
-router.delete('/:commentId', (req, res, next) => {
+router.delete('/:commentId', checkAuth.checkAuthNormal,(req, res, next) => {
     Comment.findOne({   
         _id : req.params.commentId
     }).exec((err, data) => {
